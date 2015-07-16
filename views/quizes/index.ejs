@@ -1,5 +1,15 @@
+<form method="get" action="/quizes">        
+	Búsqueda de preguntas <p>
+	<input type="text" name="search" />
+	<input type="submit" value="Filtrar">
+</form>
 <table>
 	<th>Lista de preguntas</th>
+	<% if (filtro !== '*') { %>
+		<tr><td>Filtro: <strong>"<%= filtro %>"</strong></td></tr>
+	<% } %>
+	<tr><td>Encontradas: <%= quizes.length %></td></tr>
+	<tr/><tr/>
 	<% var i; for (i=0; i < quizes.length; i++) { %>        
 		<tr><td><a href="/quizes/<%= quizes[i].id %>"><%= quizes[i].pregunta %></a></td></tr> 
 	<% } %>
