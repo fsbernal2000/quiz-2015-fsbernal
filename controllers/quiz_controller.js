@@ -100,9 +100,41 @@ exports.create = function(req, res) {
 				} else {
 					quiz 
 						.save({fields: ["pregunta", "respuesta"]})
-						.then( function(){ res.redirect('/quizes')}) 
+						.then( function(){ res.redirect('/quizes')}) // /quizes/index.ejs
 				}      
 			}
 		);
 
 };
+
+
+// GET /quizes/:id/edit
+exports.edit = function(req, res) {
+
+  // req.quiz: se ha hecho autoload de instancia de quiz (con un id)
+  res.render('quizes/edit', {quiz: req.quiz, errors: []});
+
+};
+
+
+// PUT /quizes/:id
+exports.update = function(req, res) {
+	req.quiz.pregunta  = req.body.quiz.pregunta;
+	req.quiz.respuesta = req.body.quiz.respuesta;
+
+	req.quiz
+	   .validate()
+	   .then(
+			function(err){
+				if (err) {
+					res.render('quizes/edit', {quiz: req.quiz, errors: err.errors});
+				} 
+				else {
+					req.quiz   
+					.save( {fields: ["pregunta", "respuesta"]})
+					.then( function(){ res.redirect('/quizes');}); // /quizes/index.ejs
+				}     
+			}
+	   );
+};
+
