@@ -4,6 +4,6 @@ body 	{background: #333;}
 
 h2 span, section h3, label.rem {display: none;}
 
-body			{font-size: xx-large;}
-button, input   {font-size: x-large; }
-footer			{font-size: large;}
+body					{font-size: xx-large;}
+button, input, select   {font-size: x-large; }
+footer					{font-size: large;}

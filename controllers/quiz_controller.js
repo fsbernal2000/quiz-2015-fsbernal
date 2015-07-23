@@ -21,27 +21,16 @@ exports.load = function(req, res, next, quizId) {
 
 // GET /quizes con filtro/busqueda de preguntas opcional
 exports.index = function(req, res, next) {
-	if (req.query.search) {
-		//La condición/filtro de búsqueda se construye a partir de la query 'search' donde 
-		//sustituimos espacios en blanco por un '%' más uno al inicio y otro al final
-		var condicionMayus = ('%' + req.query.search.trim() + '%')
-							.replace(/\s+/g, '%')
-							.toUpperCase();
 
-		//Consulta los registros de la tabla Quiz cuya pregunta (en mayúsculas) contenga 
-		//la condicion, ordenando los resultados alfabéticamente por el campo pregunta 
-		//y renderizandolos en la vista index.ejs 
-		models.Quiz.findAll({where: ["upper(pregunta) like ?", condicionMayus], 
-						     order: 'pregunta ASC'})
-			.then(
-				function(quizes) {
-					res.render('quizes/index', {quizes: quizes, 
-												filtro: req.query.search,
-												errors: []});
-				})
-			.catch(function(error) { next(error);})
-	}
-	else {//Si no recibe la query 'search' se muestran todas las preguntas
+	var condicionTxtMayus = whereTxtMayus = '';
+	var filtroUsu = '';
+	var filtroTema = false;
+	var whereSql = [];
+
+	//Si no recibe las querys 'searchTxt' ni 'searchTema' (o esta última es 'todos'
+	//se muestran todas las preguntas
+	if (!req.query.searchTxt && !req.query.searchTema){
+		
 		models.Quiz.findAll()
 			.then(
 				function(quizes) {
@@ -50,6 +39,43 @@ exports.index = function(req, res, next) {
 													errors: []});
 				}
 			).catch(function(error) { next(error);})
+	}
+	else {
+
+		//Si se ha seleccionado algún tema se construye la condición del where
+		if (req.query.searchTema){
+			whereSql.push('tema=? ',req.query.searchTema);
+			filtroTema = true;
+			filtroUsu = req.query.searchTema;
+		}
+
+		if (req.query.searchTxt) {
+			//La condición/filtro de búsqueda se construye a partir de la query 'searchTxt' donde 
+			//sustituimos espacios en blanco por un '%' más uno al inicio y otro al final
+			whereTxtMayus = ' upper(pregunta) like ? ';
+			condicionTxtMayus = ('%' + req.query.searchTxt.trim() + '%')
+								.replace(/\s+/g, '%')
+								.toUpperCase();
+			if (filtroTema) {
+				whereSql[0] += ' and ' + whereTxtMayus; 
+				filtroUsu += ' + "' + req.query.searchTxt + '"';
+			}
+			else
+			{
+				whereSql.push(whereTxtMayus);
+				filtroUsu = req.query.searchTxt;
+			}
+			whereSql.push(condicionTxtMayus);
+		}
+		models.Quiz.findAll({where: whereSql, 
+						     order: 'pregunta ASC'})
+			.then(
+				function(quizes) {
+					res.render('quizes/index', {quizes: quizes, 
+												filtro: filtroUsu,
+												errors: []});
+				})
+			.catch(function(error) { next(error);})
 	}
 };
 
@@ -65,7 +91,7 @@ exports.show = function(req, res) {
 //GET /quizes/:quizId/answer
 exports.answer = function (req, res) {
 
-	var resultado = (req.query.respuesta === req.quiz.respuesta) ? 'Correcto' : 'Incorrecto';
+	var resultado = (req.query.respuesta.toUpperCase() === req.quiz.respuesta.toUpperCase()) ? 'Correcto' : 'Incorrecto';
 	res.render('quizes/answer', {quiz: req.quiz, respuesta: resultado, errors: []});
 
 };
@@ -77,7 +103,7 @@ exports.new = function (req, res) {
 
 	//Se crea un objeto Quiz
 	var quiz = models.Quiz.build ( 
-			{pregunta:"Pregunta", respuesta:"Respuesta"}
+			{pregunta:"Pregunta", respuesta:"Respuesta", tema:"otro"}
 		);
 	//Se renderiza la página con el formulario de alta
 	res.render('quizes/new', {quiz : quiz, errors: []});
@@ -99,7 +125,7 @@ exports.create = function(req, res) {
 					res.render('quizes/new', {quiz: quiz, errors: err.errors});
 				} else {
 					quiz 
-						.save({fields: ["pregunta", "respuesta"]})
+						.save({fields: ["pregunta", "respuesta", "tema"]})
 						.then( function(){ res.redirect('/quizes')}) // /quizes/index.ejs
 				}      
 			}
@@ -119,8 +145,9 @@ exports.edit = function(req, res) {
 
 // PUT /quizes/:id
 exports.update = function(req, res) {
-	req.quiz.pregunta  = req.body.quiz.pregunta;
+	req.quiz.pregunta = req.body.quiz.pregunta;
 	req.quiz.respuesta = req.body.quiz.respuesta;
+	req.quiz.tema = req.body.quiz.tema;
 
 	req.quiz
 	   .validate()
@@ -131,7 +158,7 @@ exports.update = function(req, res) {
 				} 
 				else {
 					req.quiz   
-					.save( {fields: ["pregunta", "respuesta"]})
+					.save( {fields: ["pregunta", "respuesta", "tema"]})
 					.then( function(){ res.redirect('/quizes');}); // /quizes/index.ejs
 				}     
 			}
