@@ -26,10 +26,12 @@ var sequelize = new Sequelize(DB_name, user, pwd,
   }      
 );
 
+/////////////////////////////////
+//  TABLA DE PREGUNTAS (QUIZ)  //
+/////////////////////////////////
+
 //Importar la definición de la tabla Quiz (está en quiz.js)
 var Quiz = sequelize.import(path.join(__dirname, 'quiz'));
-
-exports.Quiz = Quiz; //exporta definición de la tabla Quiz
 
 //Crear e inicializar la tabla de preguntas en la BD
 sequelize.sync().then(function(){
@@ -48,3 +50,25 @@ sequelize.sync().then(function(){
 		};
 	});
 });
+
+
+//////////////////////////////////
+//  TABLA COMENTARIOS (COMMENT) //
+//////////////////////////////////
+
+//Importar la definición de la tabla Comment (está en comment.js)
+var comment_path = path.join(__dirname, 'comment');
+var Comment = sequelize.import(comment_path);
+
+//Relación con Quiz
+Comment.belongsTo(Quiz);
+Quiz.hasMany(Comment);
+
+
+/////////////////////////////
+//  EXPORTACION DE TABLAS  //
+/////////////////////////////
+
+//Exportación de definiciones de tablas
+exports.Quiz = Quiz; 		//exporta definición de la tabla Quiz
+exports.Comment = Comment;	//exporta definición de la tabla Comment
