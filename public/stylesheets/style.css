@@ -11,7 +11,8 @@ nav span						{margin: 0px 10px 0px 0px;}
 table							{margin: 1% auto;}
 table.reborde					{border-style:double;}
 
-#ErrorMsgs           { color: #f61; font-size: smaler}
+.msgLogout, .errorMsgs           { color: #f61; font-size: smaller}
 
+.msgLogout {float: left;}
 .right 	{float: right;}
 .field	{padding: 10px;}

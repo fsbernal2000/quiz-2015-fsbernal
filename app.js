@@ -29,7 +29,11 @@ app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
+//
 //Helpers dinámicos
+//
+
+//Sesión y última página previa al login/logout
 app.use(function(req, res, next) {
 
   //Guarda el path en session.redir para volver a la página anterior
@@ -42,6 +46,47 @@ app.use(function(req, res, next) {
   res.locals.session = req.session;
 
   next();
+});
+
+
+//Auto-logout de la sesión
+app.use(function(req, res, next) {
+
+  //Hacer visible el posible mensaje de auto-logout de la sesión en las vistas
+  res.locals.msgSessionOut = '';
+
+  //Comprobar que exista una sesión.
+  if (req.session.user){
+
+    var ahora = Date.now();
+    //Comprobar si es la primera acción despues del login
+    if (!req.session.ultimaAccion) {
+
+      //se inicializa la hora de la ultima accion
+      req.session.ultimaAccion = ahora;
+
+    }      
+    else {
+
+      //Si ya han pasado más de 2 min. (120000 milisegundos) 
+      //desde la última acción -> se borra la sesión y la hora de 
+      //la ultima acción
+      if ((ahora - req.session.ultimaAccion) > 120000){
+        delete req.session.user;
+        delete req.session.ultimaAccion;
+        res.locals.msgSessionOut='La sesión ha expirado';
+      }
+      else{ 
+        //se actualiza la hora de la ultima accion
+        req.session.ultimaAccion = ahora;
+      }
+
+    }
+
+  }
+
+  next();
+
 });
 
 
