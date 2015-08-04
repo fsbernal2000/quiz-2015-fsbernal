@@ -61,8 +61,8 @@ var comment_path = path.join(__dirname, 'comment');
 var Comment = sequelize.import(comment_path);
 
 //Relación con Quiz
-Comment.belongsTo(Quiz);
-Quiz.hasMany(Comment);
+Comment.belongsTo(Quiz, { onDelete: 'cascade' });
+Quiz.hasMany(Comment, { onDelete: 'cascade' });
 
 
 /////////////////////////////

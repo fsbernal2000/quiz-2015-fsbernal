@@ -28,7 +28,7 @@ exports.new = function (req, res) {
 
 
 // POST /quizes/:quizId/comments
-exports.create = function(req, res) {
+exports.create = function(req, res, next) {
 
 	var comment = models.Comment.build(
 				{
@@ -53,18 +53,19 @@ exports.create = function(req, res) {
 						//	.catch(function(error){next(error);});
 					}      
 				}
-			);
+			)
+		   .catch(function(error){next(error);});
 };
 
 
 //GET /quizes/:quizId/comments/:commentId/publish
-exports.publish = function(req, res){
+exports.publish = function(req, res, next){
 
 	//Actualiza el campo publicado del registro (precargado en load)
 	req.comment.publicado = true;
 
 	req.comment.save({fields: ["publicado"]})
 			   .then(function(){ res.redirect('/quizes/'+req.params.quizId)}) 
-			//   .catch(function(error){next(error);});
+			   .catch(function(error){next(error);});
 
 };
